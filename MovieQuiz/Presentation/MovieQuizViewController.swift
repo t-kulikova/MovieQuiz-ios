@@ -92,7 +92,8 @@ final class MovieQuizViewController: UIViewController {
             preferredStyle: .alert
         )
         
-        let resetQuizAction = UIAlertAction(title: result.buttonText, style: .default) { _ in
+        let resetQuizAction = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
+            guard let self else { return }
             self.resetQuiz()
         }
         
@@ -111,7 +112,9 @@ final class MovieQuizViewController: UIViewController {
         yesButton.isEnabled = false
         noButton.isEnabled = false
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self else { return }
+            
             self.showNextQuestionOrResults()
             self.yesButton.isEnabled = true
             self.noButton.isEnabled = true
