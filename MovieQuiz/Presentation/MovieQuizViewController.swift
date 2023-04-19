@@ -15,7 +15,7 @@ final class MovieQuizViewController: UIViewController {
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
     private let questionAmount = 10
-    private let questionFactory = QuestionFactory()
+    private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     
     // MARK: - Lifecycle
@@ -23,6 +23,7 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        questionFactory = QuestionFactory(delegate: self)
         startQuiz()
     }
     
@@ -45,24 +46,14 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Methods
     
     private func startQuiz() {
-        guard let firstQuestion = questionFactory.requestNextQuestion() else { return }
-        
-        currentQuestion = firstQuestion
-        let firstQuestionViewModel = convert(model: firstQuestion)
-        
-        show(quiz: firstQuestionViewModel)
+        questionFactory?.requestNextQuestion()
     }
     
     private func resetQuiz() {
         currentQuestionIndex = 0
         correctAnswers = 0
         
-        guard let firstQuestion = questionFactory.requestNextQuestion() else { return }
-        
-        currentQuestion = firstQuestion
-        let firstQuestionViewModel = convert(model: firstQuestion)
-        
-        show(quiz: firstQuestionViewModel)
+        questionFactory?.requestNextQuestion()
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
@@ -131,12 +122,24 @@ final class MovieQuizViewController: UIViewController {
 
         } else {
             currentQuestionIndex += 1
-            
-            guard let nextQuestion = questionFactory.requestNextQuestion() else { return }
-            currentQuestion = nextQuestion
-            let nextQuestionviewModel = convert(model: nextQuestion)
-            
-            show(quiz: nextQuestionviewModel)
+            questionFactory?.requestNextQuestion()
+        }
+    }
+    
+}
+
+// MARK: - QuestionFactoryDelegate
+
+extension MovieQuizViewController: QuestionFactoryDelegate {
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else { return }
+        
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.show(quiz: viewModel)
         }
     }
     
